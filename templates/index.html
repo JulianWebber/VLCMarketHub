@@ -7,7 +7,15 @@
             <div class="card-body">
                 <h5 class="card-title">Search Listings</h5>
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <select id="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
                         <select id="equipment-type" class="form-select">
                             <option value="">All Equipment Types</option>
                             <option value="Lights">Lights</option>
@@ -16,10 +24,10 @@
                             <option value="Accessories">Accessories</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <input type="number" id="min-price" class="form-control" placeholder="Min Price">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <input type="number" id="max-price" class="form-control" placeholder="Max Price">
                     </div>
                     <div class="col-md-2">
@@ -42,7 +50,7 @@
             {% endif %}
             <div class="card-body">
                 <h5 class="card-title">{{ listing.title }}</h5>
-                <p class="card-text">{{ listing.equipment_type }}</p>
+                <p class="card-text">{{ listing.category.name }} - {{ listing.equipment_type }}</p>
                 <p class="card-text"><strong>${{ "%.2f"|format(listing.price) }}</strong></p>
                 <a href="{{ url_for('listing_detail', id=listing.id) }}" class="btn btn-primary">View Details</a>
             </div>

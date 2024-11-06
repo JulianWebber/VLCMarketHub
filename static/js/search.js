@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const searchBtn = document.getElementById('search-btn');
+    const categorySelect = document.getElementById('category');
     const equipmentType = document.getElementById('equipment-type');
     const minPrice = document.getElementById('min-price');
     const maxPrice = document.getElementById('max-price');
@@ -7,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     searchBtn.addEventListener('click', function() {
         const params = new URLSearchParams({
+            category_id: categorySelect.value,
             equipment_type: equipmentType.value,
             min_price: minPrice.value,
             max_price: maxPrice.value
@@ -25,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                      alt="${listing.title}">
                                 <div class="card-body">
                                     <h5 class="card-title">${listing.title}</h5>
-                                    <p class="card-text">${listing.equipment_type}</p>
+                                    <p class="card-text">${listing.category} - ${listing.equipment_type}</p>
                                     <p class="card-text"><strong>$${listing.price.toFixed(2)}</strong></p>
                                     <a href="/listing/${listing.id}" class="btn btn-primary">View Details</a>
                                 </div>

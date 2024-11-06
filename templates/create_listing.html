@@ -13,6 +13,15 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="equipment_type" class="form-label">Equipment Type</label>
                         <select class="form-select" id="equipment_type" name="equipment_type" required>
                             <option value="Lights">Lights</option>
