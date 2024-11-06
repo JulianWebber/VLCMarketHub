@@ -1,4 +1,5 @@
 import os
+import time
 from flask import Flask, render_template, request, jsonify, flash, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
@@ -11,7 +12,6 @@ class Base(DeclarativeBase):
 db = SQLAlchemy(model_class=Base)
 app = Flask(__name__)
 
-# Configuration
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or "a secret key"
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
@@ -19,15 +19,23 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
 }
 
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+os.makedirs(os.path.join(app.static_folder, 'uploads'), exist_ok=True)
+
 db.init_app(app)
 
 with app.app_context():
     from models import Listing, Category
-    # Drop all tables and recreate them
     db.drop_all()
     db.create_all()
     
-    # Create default categories if they don't exist
     default_categories = [
         {"name": "Lights", "description": "Lighting equipment for video and film production"},
         {"name": "Cameras", "description": "Camera bodies, lenses, and accessories"},
@@ -41,7 +49,6 @@ with app.app_context():
             db.session.add(category)
     db.session.commit()
 
-# Routes
 @app.route('/')
 def index():
     listings = Listing.query.order_by(Listing.created_at.desc()).all()
@@ -61,6 +68,18 @@ def create_listing():
             if not category:
                 flash('Invalid category selected.', 'error')
                 return redirect(url_for('create_listing'))
+
+            image_url = None
+            if 'image' in request.files:
+                file = request.files['image']
+                if file and file.filename and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    filename = f"{int(time.time())}_{filename}"
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    image_url = f'/static/uploads/{filename}'
+                elif file.filename:
+                    flash('Invalid file type. Please upload PNG, JPG, JPEG, or GIF files only.', 'error')
+                    return redirect(url_for('create_listing'))
                 
             listing = Listing(
                 title=request.form['title'],
@@ -70,7 +89,7 @@ def create_listing():
                 contact_name=request.form['contact_name'],
                 contact_email=request.form['contact_email'],
                 contact_phone=request.form['contact_phone'],
-                image_url=request.form.get('image_url', ''),
+                image_url=image_url,
                 category_id=category.id
             )
             db.session.add(listing)
@@ -112,7 +131,6 @@ def search():
         'category': l.category.name
     } for l in listings])
 
-# Category Management Routes
 @app.route('/categories', methods=['GET', 'POST'])
 def manage_categories():
     if request.method == 'POST':
